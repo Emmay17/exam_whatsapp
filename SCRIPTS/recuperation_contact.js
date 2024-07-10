@@ -34,10 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="contact-photo">
                                     <img src="${contact.photo}" alt="Photo de profil de ${contact.nom_contact}" class="cover-profil">
                                 </div>
-                                <div class="contact-infos">
-                                    <div class="nom-infos">
+                                <div class="contact-message">
+                                    <div class="nom-heure">
                                         <h4 class="nom">${contact.nom_contact}</h4>
-                                        <b>${formattedTime}</b><br>
+                                        <p class="heure">${formattedTime}</p>
                                     </div>
                                     <div class="dernier-message">
                                         <p>${contact.dernier_message}</p>
@@ -120,27 +120,33 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('Réponse JSON du serveur :', data); // Afficher la réponse JSON pour le débogage
-
+    
                 if (data.etat === 'Success') {
                     const chatBody = document.querySelector('.chat-body');
                     chatBody.innerHTML = '';
-
+    
                     data.messages.forEach(message => {
                         // Déterminer la classe CSS en fonction de l'expéditeur
                         const myVariable = localStorage.getItem('myVariable');
                         let messageClass = message.expediteur === myVariable ? 'envoye' : 'recu';
-
+    
                         // Créer l'élément de message en fonction de la classe déterminée
                         const messageElement = document.createElement('div');
                         messageElement.classList.add('message', messageClass);
-
+    
                         messageElement.innerHTML = `
-                            <p>${message.message}</p><br>
-                            <span>${new Date(message.date_envoie).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <p>${message.message}<br>
+                            <span>${new Date(message.date_envoie).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></p>
                         `;
-
+    
                         chatBody.appendChild(messageElement);
                     });
+    
+                    // Faire défiler vers le dernier message
+                    const lastMessageElement = chatBody.lastElementChild;
+                    if (lastMessageElement) {
+                        lastMessageElement.scrollIntoView({ behavior: 'smooth' });
+                    }
                 } else {
                     console.error('Erreur lors de la récupération des messages:', data.message);
                 }
@@ -149,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Erreur loadMessages:', error.message);
             });
     }
+    
 
     // Envoyer un message
     const messageInput = document.getElementById('message-input');
