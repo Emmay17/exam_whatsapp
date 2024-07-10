@@ -24,7 +24,7 @@ session_start();
                     <div class="image-profil">
                         <img id="myProfileImage" src="#" alt="image de profil" class="cover-profil">
                     </div>
-                    <h3 style="color: black;" id="sessionName"></h2>
+                    <h3 style="color: black;" id="sessionName"></h3>
                     <ul class="menu">
                         <li><ion-icon name="scan-circle-outline" id="open-status"></ion-icon></li>
                         <li><ion-icon name="chatbox" id="open-message"></ion-icon></li>
@@ -194,8 +194,16 @@ session_start();
                 </div>
             </div>
             <div class="chat-footer">
-                <ion-icon name="happy-outline"></ion-icon>
-                <ion-icon name="attach-outline"></ion-icon>
+            <ion-icon name="happy-outline" id="emoji-button"></ion-icon>
+                <div class="emoji-menu" id="emoji-menu"></div>
+                <ion-icon name="attach-outline" id="attach-button"></ion-icon>
+                <div class="attach-menu" id="attach-menu">
+                    <ul>
+                        <li id="attach-document"><ion-icon style="color: violet;" name="document-text-outline"></ion-icon>Document</li>
+                        <li id="attach-photo-video"><ion-icon style="color: lightskyblue;" name="images-outline"></ion-icon>Photos & Vidéo</li>
+                        <li id="attach-camera"><ion-icon style="color: lightseagreen;" name="camera-outline"></ion-icon>Caméra</li>
+                    </ul>
+                </div>
                 <input type="text" placeholder="Taper un message" id="message-input">
                 <ion-icon name="mic" id="mic-button"></ion-icon>
                 <ion-icon name="send" id="send-button" style="display: none;"></ion-icon>

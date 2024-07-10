@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const myProfileImageContacts = document.getElementById('myProfileImageContacts');
     const myProfileImageInput = document.getElementById('myProfileImageInput');
     const myProfileImageNewMessage = document.getElementById('myProfileImageNewMessage');
+    const attachButton = document.getElementById('attach-button');
+    const emojiButton = document.getElementById('emoji-button');
+    const emojiMenu = document.getElementById('emoji-menu');
+    const emojis = [
+        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝',
+        '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
+        '🤮', '🤧', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭',
+        '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖',
+        '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🙊', '👀', '👁️', '💋', '💌', '💘', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💔',
+        '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💯', '💢', '💥', '💫', '💦', '💨', '🕳️', '💣', '💬', '👁️‍🗨️', '🗨️', '🗯️', '💭', '💤',
+        '🎉', '🎊', '🎂'
+    ];
+
 
     // Activer / désactiver dark mode
     toggleDarkModeButton.forEach(button => {
@@ -178,14 +191,252 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCharCount(infosInput);
     });
 
+     // Initialisation des variables pour l'enregistrement audio
+     let mediaRecorder;
+     let audioChunks = [];
+ 
+     // Gérer le bouton micro pour enregistrer l'audio
+     micButton.addEventListener('click', function () {
+         if (mediaRecorder && mediaRecorder.state === "recording") {
+             mediaRecorder.stop();
+             micButton.classList.remove('recording');
+             micButton.name = 'mic'; // Changer l'icône pour le micro
+         } else {
+             startRecording();
+         }
+     });
+ 
+     // Fonction pour démarrer l'enregistrement audio
+     function startRecording() {
+         navigator.mediaDevices.getUserMedia({ audio: true })
+             .then(stream => {
+                 mediaRecorder = new MediaRecorder(stream);
+                 mediaRecorder.start();
+                 micButton.classList.add('recording');
+                 micButton.name = 'square'; // Changer l'icône pour indiquer l'arrêt
+         
+                 mediaRecorder.ondataavailable = event => {
+                     audioChunks.push(event.data);
+                 };
+ 
+                 mediaRecorder.onstop = () => {
+                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                     audioChunks = [];
+                     const audioUrl = URL.createObjectURL(audioBlob);
+                     const messageElement = createMessageElementAudio(audioUrl);
+                     chatBody.appendChild(messageElement);
+                     messageElement.scrollIntoView({ behavior: 'smooth' });
+ 
+                     // Réinitialiser l'icône du micro
+                     micButton.name = 'mic';
+                     micButton.classList.remove('recording');
+                 };
+             })
+             .catch(error => {
+                 console.error('Erreur lors de l\'enregistrement audio :', error);
+             });
+     }
+ 
+     // Fonction pour créer un élément de message audio
+     function createMessageElementAudio(audioUrl) {
+         const messageElement = document.createElement('div');
+         messageElement.classList.add('message', 'envoye');
+         messageElement.innerHTML = `<p><audio controls><source src="${audioUrl}" type="audio/wav">Votre navigateur ne supporte pas l'élément audio.</audio><br><span>${getCurrentTime()}</span></p>`;
+         return messageElement;
+     }
+ 
+
+    // Attach menu permutation
+    attachButton.addEventListener('click', function () {
+        document.getElementById('attach-menu').classList.toggle('visible');
+    });
+
+    // Gérer les fonctionnalités des pièces jointes
+    const attachDocument = document.getElementById('attach-document');
+    const attachPhotoVideo = document.getElementById('attach-photo-video');
+    const attachCamera = document.getElementById('attach-camera');
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+
+    attachDocument.addEventListener('click', function () {
+        fileInput.accept = '.pdf,.doc,.docx,.txt';
+        fileInput.onchange = function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message', 'envoye');
+                    messageElement.innerHTML = `<p><a href="${e.target.result}" download="${file.name}">${file.name}</a><br><span>${getCurrentTime()}</span></p>`;
+                    chatBody.appendChild(messageElement);
+                    messageElement.scrollIntoView({ behavior: 'smooth' });
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        fileInput.click();
+    });
+
+    attachPhotoVideo.addEventListener('click', function () {
+        fileInput.accept = 'image/*,video/*';
+        fileInput.onchange = function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message', 'envoye');
+                    if (file.type.startsWith('image/')) {
+                        messageElement.innerHTML = `<p><img src="${e.target.result}" alt="${file.name}" style="max-width: 200px;"><br><span>${getCurrentTime()}</span></p>`;
+                    } else if (file.type.startsWith('video/')) {
+                        messageElement.innerHTML = `<p><video src="${e.target.result}" controls style="max-width: 200px;"></video><br><span>${getCurrentTime()}</span></p>`;
+                    }
+                    chatBody.appendChild(messageElement);
+                    messageElement.scrollIntoView({ behavior: 'smooth' });
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        fileInput.click();
+    });
+
+    // Ajouter les éléments pour l'aperçu en direct et le bouton de capture
+    const livePreviewContainer = document.createElement('div');
+    const livePreviewVideo = document.createElement('video');
+    const captureButton = document.createElement('button');
+
+    livePreviewContainer.style.display = 'none'; // Masquer l'aperçu en direct par défaut
+    livePreviewContainer.style.position = 'fixed'; // Placer l'aperçu en direct au-dessus du contenu
+    livePreviewContainer.style.top = '0';
+    livePreviewContainer.style.left = '0';
+    livePreviewContainer.style.width = '100%';
+    livePreviewContainer.style.height = '100%';
+    livePreviewContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Fond semi-transparent
+    livePreviewContainer.style.zIndex = '1000'; // Placer au-dessus de tout
+
+    livePreviewVideo.style.width = '100%';
+    livePreviewVideo.style.height = 'auto';
+
+    captureButton.textContent = 'Capture';
+    captureButton.style.position = 'absolute';
+    captureButton.style.bottom = '20px';
+    captureButton.style.left = '50%';
+    captureButton.style.transform = 'translateX(-50%)';
+    captureButton.style.padding = '10px 20px';
+    captureButton.style.fontSize = '16px';
+    captureButton.style.color = '#fff';
+    captureButton.style.backgroundColor = '#007bff';
+    captureButton.style.border = 'none';
+    captureButton.style.borderRadius = '5px';
+    captureButton.style.cursor = 'pointer';
+
+    livePreviewContainer.appendChild(livePreviewVideo);
+    livePreviewContainer.appendChild(captureButton);
+    document.body.appendChild(livePreviewContainer);
+
+    // Attache Caméra
+    attachCamera.addEventListener('click', function () {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                livePreviewVideo.srcObject = stream;
+                livePreviewContainer.style.display = 'flex';
+                livePreviewVideo.play();
+
+                captureButton.onclick = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = livePreviewVideo.videoWidth;
+                    canvas.height = livePreviewVideo.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(livePreviewVideo, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const messageElement = document.createElement('div');
+                            messageElement.classList.add('message', 'envoye');
+                            messageElement.innerHTML = `<p><img src="${e.target.result}" alt="captured image" style="max-width: 100%; height: auto;"><br><span>${getCurrentTime()}</span></p>`;
+                            chatBody.appendChild(messageElement);
+                            messageElement.scrollIntoView({ behavior: 'smooth' });
+                        };
+                        reader.readAsDataURL(blob);
+
+                        // Arrêter le flux vidéo et masquer l'aperçu en direct
+                        stream.getTracks().forEach(track => track.stop());
+                        livePreviewContainer.style.display = 'none';
+                    }, 'image/jpeg');
+                };
+            })
+            .catch(error => {
+                console.error('Erreur lors de l\'accès à la caméra :', error);
+            });
+    });
+
+    // Afficher les emojis dans le menu
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement('span');
+        emojiSpan.textContent = emoji;
+        emojiMenu.appendChild(emojiSpan);
+
+        // Ajouter un événement de clic sur chaque emoji pour l'insérer dans le champ de texte
+        emojiSpan.addEventListener('click', function () {
+            messageInput.value += emoji;
+            messageInput.focus();
+        });
+    });
+
+    // Afficher/Masquer le menu des emojis
+    emojiButton.addEventListener('click', function () {
+        if (emojiMenu.style.display === 'none' || emojiMenu.style.display === '') {
+            emojiMenu.style.display = 'block';
+        } else {
+            emojiMenu.style.display = 'none';
+        }
+    });
+
+    // Masquer les menus en cliquant en dehors
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#sidebar-menu') && !event.target.closest('#sidebar-menu-toggle')) {
+            document.getElementById('sidebar-menu').classList.remove('visible');
+        }
+        if (!event.target.closest('#chat-menu') && !event.target.closest('#chat-menu-toggle')) {
+            document.getElementById('chat-menu').classList.remove('visible');
+        }
+        if (!event.target.closest('#attach-menu') && !event.target.closest('#attach-button')) {
+            document.getElementById('attach-menu').classList.remove('visible');
+        }
+        if (!emojiButton.contains(event.target) && !emojiMenu.contains(event.target)) {
+            emojiMenu.style.display = 'none';
+        }
+    });
+
+    // Appels audio / vidéo
+    const videoCallButton = document.querySelector('.chat .menu li ion-icon[name="videocam-outline"]');
+    const phoneCallButton = document.querySelector('.chat .menu li ion-icon[name="call-outline"]');
+
+    videoCallButton.addEventListener('click', function () {
+        window.location.href = 'calls3_1/videocall.html';
+    });
+    phoneCallButton.addEventListener('click', function () {
+        window.location.href = 'calls3_1/phonecall.html';
+    });
+
+    // Afficher settings
+    const settingsButton = document.getElementById('settings');
+
+    settingsButton.addEventListener('click', function () {
+        window.location.href = 'calls3_1/settings.html';
+    });
+
     // Ouvrir / fermer les onglets
-    openProfileIcon.addEventListener('click', openProfile);
     profileImage.addEventListener('click', openProfile);
     openStatusIcon.addEventListener('click', openStatus);
     openMessageIcon.addEventListener('click', openMessage);
     retourProfileIcon.addEventListener('click', retour);
     retourStatusIcon.addEventListener('click', retour);
     retourMessageIcon.addEventListener('click', retour);
+
 
     function openProfile() {
         document.querySelector('.contacts').style.display = 'none';
